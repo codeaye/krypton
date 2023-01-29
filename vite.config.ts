@@ -1,10 +1,16 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
+import topLevelAwait from "vite-plugin-top-level-await";
+
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    topLevelAwait({
+      promiseExportName: "__tla",
+      promiseImportName: i => `__tla_${i}`
+    }),
     svelte({
       preprocess: [
         sveltePreprocess({
@@ -13,6 +19,7 @@ export default defineConfig({
       ],
     }),
   ],
+
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   // prevent vite from obscuring rust errors

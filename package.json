@@ -13,7 +13,8 @@
   "dependencies": {
     "@picocss/pico": "^1.5.7",
     "@tauri-apps/api": "^1.2.0",
-    "tauri-plugin-store-api": "https://github.com/tauri-apps/tauri-plugin-store"
+    "tauri-plugin-store-api": "https://github.com/tauri-apps/tauri-plugin-store",
+    "vite-plugin-top-level-await": "^1.2.3"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.0",
