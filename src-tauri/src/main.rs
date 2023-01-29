@@ -18,7 +18,7 @@ use cocoa::appkit::{NSWindow, NSWindowButton, NSWindowStyleMask, NSWindowTitleVi
 
 #[cfg(target_os = "macos")]
 use objc::runtime::YES;
-use tauri::{Manager, Runtime, Window};
+use tauri::{Manager, RunEvent, Runtime, Window, WindowEvent};
 
 pub trait WindowExt {
     #[cfg(target_os = "macos")]
@@ -113,8 +113,8 @@ fn convert(input: &str, int: Format, out: Format) -> Result<String, bool> {
 }
 
 fn main() {
-    // convert(toml::from_str::<TOMLValue>("{\"Sup\": 2}").unwrap());
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             #[cfg(target_os = "macos")]
@@ -125,6 +125,31 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![convert])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    app.run(|app_handle, e| match e {
+        RunEvent::WindowEvent {
+            label,
+            event: WindowEvent::CloseRequested { api, .. },
+            ..
+        } => {
+            if label == "main" {
+                let app_handle = app_handle.clone();
+                let window = app_handle.get_window(&label).unwrap();
+                api.prevent_close();
+                window
+                    .emit_all("close-requested", "Requesting close.")
+                    .unwrap();
+                window.once("close-safe", |_| {
+                    #[cfg(debug_assertions)]
+                    println!("Saved");
+                    std::thread::spawn(move || {
+                        app_handle.get_window(&label).unwrap().close().unwrap();
+                    });
+                });
+            }
+        }
+        _ => {}
+    })
 }
